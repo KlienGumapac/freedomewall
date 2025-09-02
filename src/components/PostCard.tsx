@@ -102,18 +102,15 @@ export default function PostCard({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      {/* Post Header */}
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
-            {/* Author Avatar */}
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-green-600 font-semibold text-sm">
                 {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
               </span>
             </div>
             
-            {/* Author Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2 mb-1">
                 <h3 className="font-semibold text-gray-900 text-sm">
@@ -131,7 +128,6 @@ export default function PostCard({
             </div>
           </div>
 
-          {/* Options Menu */}
           {showActions && (
             <div className="relative">
               <button
@@ -183,14 +179,11 @@ export default function PostCard({
         </div>
       </div>
 
-      {/* Post Content */}
       <div className="px-4 pb-3">
         <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">
           {post.content}
         </p>
       </div>
-
-      {/* Post Image */}
       {post.image && (
         <div className="relative">
           <div className="bg-gray-200 aspect-video flex items-center justify-center">
@@ -201,7 +194,6 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Post Stats */}
       {showActions && (likesCount > 0 || post.comments > 0 || (post.shares && post.shares > 0)) && (
         <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between text-sm text-gray-500">
@@ -227,7 +219,6 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Post Actions */}
       {showActions && (
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">

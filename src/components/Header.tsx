@@ -42,11 +42,8 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-        {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between h-16">
-          {/* Left Section - Logo and Search */}
           <div className="flex items-center space-x-4">
-            {/* Logo */}
             <button 
               onClick={() => router.push('/dashboard')}
               className="flex items-center hover:opacity-80 transition-opacity"
@@ -60,7 +57,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
               </h1>
             </button>
             
-            {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +71,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
             </div>
           </div>
 
-          {/* Center Section - Navigation Icons */}
           <div className="flex items-center space-x-1">
             <button 
               onClick={() => {
@@ -84,7 +79,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
                   router.push('/dashboard');
                 } catch (error) {
                   console.error('Navigation error:', error);
-                  // Fallback to window.location if router fails
                   window.location.href = '/dashboard';
                 }
               }}
@@ -119,16 +113,13 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
             </button>
           </div>
 
-          {/* Right Section - User Actions */}
           <div className="flex items-center space-x-2">
-            {/* Menu Grid */}
             <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
               <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
               </svg>
             </button>
             
-            {/* Messenger */}
             <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
               <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -138,7 +129,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
               </div>
             </button>
             
-            {/* Notifications */}
             <button className={`p-2 rounded-lg hover:bg-gray-100 transition-colors relative ${
               activePage === 'notifications' ? 'text-green-600' : 'text-gray-600'
             }`}>
@@ -150,7 +140,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
               </div>
             </button>
             
-            {/* User Profile */}
             <div className="relative profile-dropdown">
               <button 
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -166,7 +155,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
                 </svg>
               </button>
               
-              {/* Dropdown Menu */}
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                   <button 
@@ -191,9 +179,7 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
           </div>
         </div>
 
-        {/* Mobile Header */}
         <div className="md:hidden flex items-center justify-between h-16 px-2">
-          {/* Mobile Logo */}
           <button 
             onClick={() => router.push('/dashboard')}
             className="flex items-center hover:opacity-80 transition-opacity"
@@ -207,9 +193,7 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
             </h1>
           </button>
 
-          {/* Mobile Actions */}
           <div className="flex items-center space-x-2">
-            {/* Search Button */}
             <button 
               onClick={() => setShowMobileSearch(!showMobileSearch)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -219,7 +203,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
               </svg>
             </button>
 
-            {/* Notifications */}
             <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
               <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -228,8 +211,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
                 <span className="text-white text-xs font-bold">5</span>
               </div>
             </button>
-
-            {/* User Profile */}
             <div className="relative profile-dropdown">
               <button 
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -242,7 +223,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
                 </div>
               </button>
               
-              {/* Mobile Dropdown Menu */}
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                   <button 
@@ -267,7 +247,6 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
           </div>
         </div>
 
-        {/* Mobile Search Bar */}
         {showMobileSearch && (
           <div className="md:hidden px-2 pb-4">
             <div className="relative">

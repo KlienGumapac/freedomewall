@@ -25,7 +25,7 @@ export default function LoginPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
+ 
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -67,11 +67,10 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store token in localStorage (you might want to use a more secure method)
+    
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to dashboard or home page
         router.push('/dashboard');
       } else {
         setErrors({ submit: data.error || 'Login failed' });
@@ -85,7 +84,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+ 
       <header className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -108,10 +107,9 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Side - Form */}
+    
           <div className="max-w-md mx-auto lg:mx-0">
             <div className="text-center lg:text-left mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -213,7 +211,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Right Side - Benefits */}
           <div className="bg-gray-50 rounded-2xl p-8 lg:p-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               What you'll find on Freedom Wall

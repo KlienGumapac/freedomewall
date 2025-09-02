@@ -21,10 +21,8 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
 
   return (
     <>
-      {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex items-center justify-around py-2">
-          {/* Home */}
           <button 
             onClick={() => router.push('/dashboard')}
             className={`flex flex-col items-center p-2 transition-colors ${
@@ -37,7 +35,6 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
             <span className="text-xs font-medium">Home</span>
           </button>
 
-          {/* Search */}
           <button 
             className={`flex flex-col items-center p-2 transition-colors ${
               activePage === 'search' ? 'text-green-600' : 'text-gray-600 hover:text-green-600'
@@ -49,7 +46,6 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
             <span className="text-xs font-medium">Search</span>
           </button>
 
-          {/* Create Post */}
           <button 
             onClick={onCreatePost}
             className={`flex flex-col items-center p-2 transition-colors ${
@@ -64,7 +60,6 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
             <span className="text-xs font-medium">Post</span>
           </button>
 
-          {/* Notifications */}
           <button 
             className={`flex flex-col items-center p-2 transition-colors relative ${
               activePage === 'notifications' ? 'text-green-600' : 'text-gray-600 hover:text-green-600'
@@ -79,7 +74,6 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
             <span className="text-xs font-medium">Alerts</span>
           </button>
 
-          {/* Profile */}
           <button 
             onClick={() => router.push('/profile')}
             className={`flex flex-col items-center p-2 transition-colors ${
@@ -100,7 +94,6 @@ export default function MobileBottomNav({ user, activePage = 'home', onCreatePos
         </div>
       </div>
 
-      {/* Mobile Bottom Padding to prevent content from being hidden behind bottom nav */}
       <div className="md:hidden h-20"></div>
     </>
   );

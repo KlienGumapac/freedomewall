@@ -50,7 +50,7 @@ export default function ProfilePage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      // Mock posts data for now
+ 
       setPosts([
         {
           _id: '1',
@@ -110,9 +110,8 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} activePage="profile" onLogout={handleLogout} />
 
-      {/* Profile Banner */}
       <div className="relative">
-        {/* Cover Photo */}
+      
         <div className="h-80 bg-gradient-to-r from-green-400 to-blue-500 relative">
           <div className="absolute inset-0 bg-black bg-opacity-20"></div>
           <button className="absolute bottom-4 right-4 bg-white bg-opacity-90 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-100 transition-all">
@@ -120,7 +119,6 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Profile Picture */}
         <div className="absolute bottom-0 left-8 transform translate-y-1/2">
           <div className="relative">
             <div className="w-32 h-32 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
@@ -140,12 +138,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Profile Info Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-          {/* Left Column - Profile Info */}
           <div className="lg:w-1/3 lg:pr-8 mb-8">
-            {/* Name and Actions */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 {user.firstName} {user.lastName}
@@ -166,7 +161,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Intro Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Intro</h2>
               
@@ -216,7 +210,6 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {/* Photos Section */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Photos</h2>
               <div className="grid grid-cols-3 gap-2">
@@ -234,9 +227,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Right Column - Posts */}
           <div className="lg:w-2/3">
-            {/* Profile Navigation Tabs */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
               <div className="flex border-b border-gray-200">
                 {['posts', 'about', 'friends', 'photos', 'reels', 'check-ins'].map((tab) => (
@@ -255,7 +246,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Posts Section */}
             {activeTab === 'posts' && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -270,7 +260,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* View Toggle */}
                 <div className="flex items-center space-x-4 mb-6">
                   <button
                     onClick={() => setViewMode('list')}
@@ -293,8 +282,6 @@ export default function ProfilePage() {
                     Grid view
                   </button>
                 </div>
-
-                {/* Posts Grid/List */}
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {posts.map((post) => (
@@ -381,7 +368,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Other Tab Content */}
             {activeTab !== 'posts' && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                 <div className="text-gray-400 mb-4">

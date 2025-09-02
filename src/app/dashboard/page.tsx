@@ -45,9 +45,9 @@ export default function DashboardPage() {
   };
 
   const handlePostSubmit = (content: string, image?: File) => {
-    // TODO: Implement post creation API call
+
     console.log('Creating post:', content, image);
-    // This would normally make an API call to create the post
+
   };
 
   if (isLoading) {
@@ -69,15 +69,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <Header user={user} activePage="home" onLogout={handleLogout} />
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Section */}
+
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {user.firstName}! 👋</h2>
           <p className="text-gray-600 text-lg">What's on your mind today?</p>
         </div>
 
-        {/* Post Creation */}
         <CreatePost user={user} onSubmit={handlePostSubmit} />
       </main>
 

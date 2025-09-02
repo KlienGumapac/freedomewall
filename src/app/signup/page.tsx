@@ -20,7 +20,6 @@ export default function SignupPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -88,7 +87,7 @@ export default function SignupPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to login page on success
+
         router.push('/login?message=Account created successfully! Please log in.');
       } else {
         setErrors({ submit: data.error || 'Signup failed' });
@@ -102,7 +101,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -125,10 +123,8 @@ export default function SignupPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Side - Form */}
           <div className="max-w-md mx-auto lg:mx-0">
             <div className="text-center lg:text-left mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -287,7 +283,6 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Right Side - Benefits */}
           <div className="bg-gray-50 rounded-2xl p-8 lg:p-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Why join Freedom Wall?

@@ -67,14 +67,12 @@ export default function CreatePost({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <form onSubmit={handleSubmit}>
           <div className="flex items-center space-x-3">
-            {/* Profile Picture */}
             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-green-600 font-semibold text-sm">
                 {user.firstName.charAt(0)}{user.lastName.charAt(0)}
               </span>
             </div>
             
-            {/* Input */}
             <div className="flex-1">
               <input
                 type="text"
@@ -85,7 +83,6 @@ export default function CreatePost({
               />
             </div>
             
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={!content.trim() || isSubmitting}
@@ -103,14 +100,12 @@ export default function CreatePost({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <form onSubmit={handleSubmit}>
         <div className="flex items-start space-x-4">
-          {/* Profile Picture */}
           <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-green-600 font-bold text-lg">
               {user.firstName.charAt(0)}{user.lastName.charAt(0)}
             </span>
           </div>
           
-          {/* Post Input */}
           <div className="flex-1">
             <textarea
               value={content}
@@ -120,7 +115,6 @@ export default function CreatePost({
               rows={4}
             />
             
-            {/* Image Preview */}
             {imagePreview && (
               <div className="relative mt-4">
                 <img
@@ -140,7 +134,6 @@ export default function CreatePost({
               </div>
             )}
             
-            {/* Post Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
               <div className="flex items-center space-x-4 text-gray-500">
                 {/* Photo Upload */}
@@ -157,7 +150,6 @@ export default function CreatePost({
                   />
                 </label>
 
-                {/* Feeling/Activity */}
                 <button type="button" className="flex items-center space-x-2 hover:text-green-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -165,7 +157,6 @@ export default function CreatePost({
                   <span className="text-sm font-medium">Feeling</span>
                 </button>
 
-                {/* Location */}
                 <button type="button" className="flex items-center space-x-2 hover:text-green-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 0 1111.314 0z" />
@@ -174,7 +165,6 @@ export default function CreatePost({
                   <span className="text-sm font-medium">Location</span>
                 </button>
 
-                {/* GIF */}
                 <button type="button" className="flex items-center space-x-2 hover:text-green-600 transition-colors">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 14v2a1 1 0 001 1h8a1 1 0 001-1v-2m-9 0h10m-10 0V6a1 1 0 011-1h8a1 1 0 011 1v10" />
@@ -183,7 +173,6 @@ export default function CreatePost({
                 </button>
               </div>
               
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={(!content.trim() && !selectedImage) || isSubmitting}
