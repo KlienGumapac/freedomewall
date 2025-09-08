@@ -242,8 +242,6 @@ This project is open source and available under the [MIT License](LICENSE).
 - **MongoDB** for the robust database solution
 - **Open Source Community** for inspiration and tools
 
----
-
 **Built with ❤️ and ☕ by Klien Gumapac**
 
 _"Building the future, one line of code at a time"_
