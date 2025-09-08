@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+﻿import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
@@ -8,7 +8,12 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   avatar?: string;
+  coverPhoto?: string;
   bio?: string;
+  education?: string;
+  location?: string;
+  relationship?: string;
+  joinDate?: Date;
   isVerified: boolean;
   followers: mongoose.Types.ObjectId[];
   following: mongoose.Types.ObjectId[];
@@ -56,10 +61,33 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: null
   },
+  coverPhoto: {
+    type: String,
+    default: null
+  },
   bio: {
     type: String,
     maxlength: [500, 'Bio cannot exceed 500 characters'],
     default: ''
+  },
+  education: {
+    type: String,
+    maxlength: [200, 'Education cannot exceed 200 characters'],
+    default: ''
+  },
+  location: {
+    type: String,
+    maxlength: [100, 'Location cannot exceed 100 characters'],
+    default: ''
+  },
+  relationship: {
+    type: String,
+    maxlength: [100, 'Relationship status cannot exceed 100 characters'],
+    default: ''
+  },
+  joinDate: {
+    type: Date,
+    default: Date.now
   },
   isVerified: {
     type: Boolean,
@@ -109,4 +137,9 @@ userSchema.set('toJSON', {
   }
 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', userSchema); 
+// In dev with hot-reload, ensure schema updates are picked up
+if (process.env.NODE_ENV !== 'production' && (mongoose.models as any).User) {
+  delete (mongoose.models as any).User;
+}
+
+export default mongoose.model<IUser>('User', userSchema);

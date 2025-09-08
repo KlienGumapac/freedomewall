@@ -37,6 +37,38 @@ interface Post {
   isPinned?: boolean;
 }
 
+function formatJoinDate(input?: string): string | undefined {
+  if (!input) return undefined;
+  const date = new Date(input);
+  if (isNaN(date.getTime())) return input;
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+async function compressImageToBase64(
+  file: File,
+  options: { maxWidth: number; quality: number; mimeType?: string }
+): Promise<string> {
+  const { maxWidth, quality, mimeType } = options;
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxWidth / bitmap.width);
+  const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
+  const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas not supported');
+  ctx.drawImage(bitmap, 0, 0, targetWidth, targetHeight);
+
+  let dataUrl = canvas.toDataURL(mimeType || 'image/jpeg', quality);
+  if (mimeType === 'image/webp' && !dataUrl.startsWith('data:image/webp')) {
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+  return dataUrl;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -57,105 +89,172 @@ export default function ProfilePage() {
       return;
     }
 
-    try {
-      const parsedUser = JSON.parse(userData);
-      
-      // Create user-specific storage keys using user ID
-      const userKey = `user_${parsedUser._id}`;
-      const savedAvatar = localStorage.getItem(`${userKey}_avatar`);
-      const savedCoverPhoto = localStorage.getItem(`${userKey}_cover_photo`);
-      const savedProfileInfo = localStorage.getItem(`${userKey}_profile_info`);
-      
-      if (savedAvatar) {
-        parsedUser.avatar = savedAvatar;
-      }
-      if (savedCoverPhoto) {
-        parsedUser.coverPhoto = savedCoverPhoto;
-      }
-      if (savedProfileInfo) {
-        const profileInfo = JSON.parse(savedProfileInfo);
-        parsedUser.bio = profileInfo.bio;
-        parsedUser.education = profileInfo.education;
-        parsedUser.location = profileInfo.location;
-        parsedUser.relationship = profileInfo.relationship;
-        parsedUser.joinDate = profileInfo.joinDate;
-      } else {
-        // Set join date based on when account was created, leave other fields empty
-        if (!parsedUser.joinDate) {
-          const now = new Date();
-          const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"];
-          parsedUser.joinDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    const load = async () => {
+      try {
+     
+        const res = await fetch('/api/user/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const fetched: User = data.user;
+          fetched.joinDate = formatJoinDate(fetched.joinDate) || fetched.joinDate;
+          setUser(fetched);
+          localStorage.setItem('user', JSON.stringify(fetched));
+        } else {
+    
+          const parsedUser: User = JSON.parse(userData);
+          parsedUser.joinDate = formatJoinDate(parsedUser.joinDate) || parsedUser.joinDate;
+          setUser(parsedUser);
         }
+
+        setPosts([
+          {
+            _id: '1',
+            content: 'Just finished building this amazing social media platform! ',
+            image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500',
+            likes: 24,
+            comments: 8,
+            createdAt: '2024-01-15T10:30:00Z',
+            isPinned: true,
+          },
+          {
+            _id: '2',
+            content: 'Beautiful sunset from my hometown! ',
+            image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500',
+            likes: 15,
+            comments: 3,
+            createdAt: '2024-01-14T18:45:00Z',
+          },
+          {
+            _id: '3',
+            content: 'Working on some exciting new features for Freedom Wall! ',
+            likes: 12,
+            comments: 5,
+            createdAt: '2024-01-13T14:20:00Z',
+          },
+        ]);
+      } catch (error) {
+        console.error('Error loading user:', error);
+        router.push('/login');
+      } finally {
+        setIsLoading(false);
       }
-      
-      setUser(parsedUser);
-      
-      // Mock posts data
-      setPosts([
-        {
-          _id: '1',
-          content: 'Just finished building this amazing social media platform! ',
-          image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500',
-          likes: 24,
-          comments: 8,
-          createdAt: '2024-01-15T10:30:00Z',
-          isPinned: true
-        },
-        {
-          _id: '2',
-          content: 'Beautiful sunset from my hometown! ',
-          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500',
-          likes: 15,
-          comments: 3,
-          createdAt: '2024-01-14T18:45:00Z'
-        },
-        {
-          _id: '3',
-          content: 'Working on some exciting new features for Freedom Wall! ',
-          likes: 12,
-          comments: 5,
-          createdAt: '2024-01-13T14:20:00Z'
-        }
-      ]);
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/login');
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    load();
   }, [router]);
 
   const handleLogout = () => {
-    // Only remove authentication data, keep images for next login
+    
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    // DON'T remove user-specific images - they're stored with user ID keys
+
     router.push('/login');
   };
 
-  const handleProfileInfoSave = (profileData: ProfileData) => {
+  const handleProfileInfoSave = async (profileData: ProfileData) => {
     if (user) {
-      const updatedUser = {
-        ...user,
-        bio: profileData.bio,
-        education: profileData.education,
-        location: profileData.location,
-        relationship: profileData.relationship,
-        joinDate: profileData.joinDate
-      };
-      
-      setUser(updatedUser);
-      
-      // Save to localStorage with user-specific key
-      const userKey = `user_${user._id}`;
-      localStorage.setItem(`${userKey}_profile_info`, JSON.stringify(profileData));
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/user/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            bio: profileData.bio,
+            education: profileData.education,
+            location: profileData.location,
+            relationship: profileData.relationship,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const updated: User = data.user;
+          updated.joinDate = formatJoinDate(updated.joinDate) || updated.joinDate;
+          setUser(updated);
+          localStorage.setItem('user', JSON.stringify(updated));
+        } else {
+          console.error('Failed to update profile');
+          alert('Failed to update profile. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        alert('Error updating profile. Please try again.');
+      }
+    }
+  };
+
+  const handleProfileImageUpload = async (file: File) => {
+    if (user) {
+      try {
+        
+        const imageUrl = await compressImageToBase64(file, { maxWidth: 256, quality: 0.8, mimeType: 'image/jpeg' });
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/user/avatar', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ avatar: imageUrl }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const updated: User = data.user;
+          updated.joinDate = formatJoinDate(updated.joinDate) || updated.joinDate;
+          setUser(updated);
+          localStorage.setItem('user', JSON.stringify(updated));
+        } else {
+          console.error('Failed to update avatar');
+          alert('Failed to update profile picture. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error updating avatar:', error);
+        alert('Error updating profile picture. Please try again.');
+      }
+    }
+  };
+
+  const handleCoverImageUpload = async (file: File) => {
+    if (user) {
+      try {
+  
+        const imageUrl = await compressImageToBase64(file, { maxWidth: 1280, quality: 0.75, mimeType: 'image/webp' });
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/user/cover-photo', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ coverPhoto: imageUrl }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const updated: User = data.user;
+          updated.joinDate = formatJoinDate(updated.joinDate) || updated.joinDate;
+          setUser(updated);
+          localStorage.setItem('user', JSON.stringify(updated));
+        } else {
+          const text = await response.text().catch(() => '');
+          console.error('Failed to update cover photo', response.status, text);
+          alert('Failed to update cover photo. Please try again (image may be too large).');
+        }
+      } catch (error) {
+        console.error('Error updating cover photo:', error);
+        alert('Error updating cover photo. Please try again.');
+      }
     }
   };
 
   const handlePostSubmit = (content: string, image?: File) => {
-    // Create new post
+  
     const newPost = {
       _id: Date.now().toString(),
       content,
@@ -166,65 +265,11 @@ export default function ProfilePage() {
       isPinned: false
     };
     
-    // Add to posts array
     setPosts(prevPosts => [newPost, ...prevPosts]);
     
     console.log('Creating post:', content, image);
   };
 
-  const handleProfileImageUpload = (file: File) => {
-    // Convert file to base64 for persistence
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageUrl = e.target?.result as string;
-      
-      // Update user state with new profile image
-      if (user) {
-        const updatedUser = {
-          ...user,
-          avatar: imageUrl
-        };
-        setUser(updatedUser);
-        
-        // Save to localStorage with user-specific key
-        const userKey = `user_${user._id}`;
-        localStorage.setItem(`${userKey}_avatar`, imageUrl);
-        
-        // Update the main user data in localStorage
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-    };
-    reader.readAsDataURL(file);
-    
-    console.log('Profile image uploaded:', file.name);
-  };
-
-  const handleCoverImageUpload = (file: File) => {
-    // Convert file to base64 for persistence
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageUrl = e.target?.result as string;
-      
-      // Update user state with new cover photo
-      if (user) {
-        const updatedUser = {
-          ...user,
-          coverPhoto: imageUrl
-        };
-        setUser(updatedUser);
-        
-        // Save to localStorage with user-specific key
-        const userKey = `user_${user._id}`;
-        localStorage.setItem(`${userKey}_cover_photo`, imageUrl);
-        
-        // Update the main user data in localStorage
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-    };
-    reader.readAsDataURL(file);
-    
-    console.log('Cover photo uploaded:', file.name);
-  };
 
   if (isLoading) {
     return (
@@ -615,3 +660,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

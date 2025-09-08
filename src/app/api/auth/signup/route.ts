@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
     
     const { username, email, password, firstName, lastName } = await request.json();
 
-    // Validation
     if (!username || !email || !password || !firstName || !lastName) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({
       $or: [{ email }, { username }]
     });
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create new user
     const user = new User({
       username,
       email,
@@ -54,7 +51,6 @@ export async function POST(request: NextRequest) {
 
     await user.save();
 
-    // Return user data without password
     const userResponse = user.toJSON();
 
     return NextResponse.json({
