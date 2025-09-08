@@ -1,13 +1,12 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
-import MobileBottomNav from '@/components/MobileBottomNav';
+import CreatePost from '@/components/CreatePost';
 import ImageUploadModal from '@/components/ImageUploadModal';
 import ProfileInfoModal, { ProfileData } from '@/components/ProfileInfoModal';
-import CreatePost from '@/components/CreatePost';
 
 interface User {
   _id: string;
@@ -42,7 +41,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'posts' | 'about' | 'friends'>('posts');
+  const [activeTab, setActiveTab] = useState('posts');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
@@ -152,24 +151,6 @@ export default function ProfilePage() {
       localStorage.setItem(`${userKey}_profile_info`, JSON.stringify(profileData));
       localStorage.setItem('user', JSON.stringify(updatedUser));
     }
-  };
-
-  const handlePostSubmit = (content: string, image?: File) => {
-    // Create new post
-    const newPost = {
-      _id: Date.now().toString(),
-      content,
-      image: image ? URL.createObjectURL(image) : undefined,
-      likes: 0,
-      comments: 0,
-      createdAt: new Date().toISOString(),
-      isPinned: false
-    };
-    
-    // Add to posts array
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-    
-    console.log('Creating post:', content, image);
   };
 
   const handleProfileImageUpload = (file: File) => {
@@ -383,6 +364,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <CreatePost user={user} onSubmit={handlePostSubmit} placeholder="What's on your mind?" />
+            </div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Photos</h2>
               <div className="grid grid-cols-3 gap-2">
                 {posts.filter(post => post.image).slice(0, 6).map((post) => (
@@ -463,15 +447,8 @@ export default function ProfilePage() {
 
               <div className="p-4">
                 {activeTab === 'posts' && (
-                  <div className="space-y-6">
-                    {/* Create Post Section */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <CreatePost user={user} onSubmit={handlePostSubmit} />
-                    </div>
-                    
-                    {/* Posts List */}
-                    <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}`}>
-                      {posts.map((post) => (
+                  <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}`}>
+                    {posts.map((post) => (
                       <div key={post._id} className={`bg-gray-50 rounded-lg p-4 ${post.isPinned ? 'border-l-4 border-green-600' : ''}`}>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
@@ -525,7 +502,6 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     ))}
-                    </div>
                   </div>
                 )}
 

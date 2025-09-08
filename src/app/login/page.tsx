@@ -31,7 +31,6 @@ export default function LoginPage() {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name as keyof Errors]) {
       setErrors(prev => ({
         ...prev,
@@ -76,7 +75,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Create user-specific storage keys using user ID
+  
         const userKey = `user_${data.user._id}`;
         const savedAvatar = localStorage.getItem(`${userKey}_avatar`);
         const savedCoverPhoto = localStorage.getItem(`${userKey}_cover_photo`);

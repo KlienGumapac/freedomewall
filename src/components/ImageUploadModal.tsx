@@ -29,13 +29,12 @@ export default function ImageUploadModal({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
+     
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('File size must be less than 5MB');
         return;
@@ -43,7 +42,6 @@ export default function ImageUploadModal({
 
       setSelectedFile(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setPreview(e.target?.result as string);
@@ -57,13 +55,11 @@ export default function ImageUploadModal({
 
     setIsUploading(true);
     try {
-      // Simulate upload process
+
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Call the upload handler
       onUpload(selectedFile);
 
-      // Reset state
       setSelectedFile(null);
       setPreview(null);
       onClose();

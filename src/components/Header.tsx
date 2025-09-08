@@ -82,7 +82,7 @@ export default function Header({ user, activePage = 'home', onLogout }: HeaderPr
                   router.push('/dashboard');
                 } catch (error) {
                   console.error('Navigation error:', error);
-                  // Fallback to window.location if router fails
+   
                   window.location.href = '/dashboard';
                 }
               }}
