@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 
 interface User {
@@ -13,7 +13,7 @@ interface User {
 
 interface CreatePostProps {
   user: User;
-  onSubmit: (content: string, image?: File) => void;
+  onSubmit: (content: string, images?: File[]) => void;
   placeholder?: string;
   compact?: boolean;
 }
@@ -25,20 +25,22 @@ export default function CreatePost({
   compact = false 
 }: CreatePostProps) {
   const [content, setContent] = useState('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !selectedImage) return;
+    if (!content.trim() && selectedImages.length === 0) return;
 
     setIsSubmitting(true);
     try {
-      await onSubmit(content, selectedImage || undefined);
+      await onSubmit(content, selectedImages);
       setContent('');
-      setSelectedImage(null);
-      setImagePreview(null);
+      setSelectedImages([]);
+      setImagePreviews([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Error creating post:', error);
     } finally {
@@ -47,20 +49,24 @@ export default function CreatePost({
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const limited = files.slice(0, 10); 
+    setSelectedImages(prev => [...prev, ...limited]);
+
+    limited.forEach(file => {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
+      reader.onload = (ev) => {
+        setImagePreviews(prev => [...prev, ev.target?.result as string]);
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+  const removeImageAt = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   if (compact) {
@@ -94,11 +100,45 @@ export default function CreatePost({
             
             <button
               type="submit"
-              disabled={!content.trim() || isSubmitting}
+              disabled={(!content.trim() && selectedImages.length === 0) || isSubmitting}
               className="bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Posting...' : 'Post'}
             </button>
+          </div>
+
+          {imagePreviews.length > 0 && (
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {imagePreviews.map((src, idx) => (
+                <div key={idx} className="relative group">
+                  <img src={src} alt="Preview" className="w-full h-24 object-cover rounded-lg" />
+                  <button
+                    type="button"
+                    onClick={() => removeImageAt(idx)}
+                    className="absolute top-1 right-1 bg-gray-800 bg-opacity-75 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-3">
+            <label className="inline-flex items-center space-x-2 text-gray-600 hover:text-green-600 cursor-pointer transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm font-medium">Add Photos</span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+            </label>
           </div>
         </form>
       </div>
@@ -133,23 +173,21 @@ export default function CreatePost({
               className="w-full border-0 resize-none focus:ring-0 focus:outline-none text-gray-900 placeholder-gray-500 text-lg min-h-[120px]"
               rows={4}
             />
-            
-            {imagePreview && (
-              <div className="relative mt-4">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="max-w-full h-auto rounded-lg max-h-96 object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white rounded-full p-2 hover:bg-opacity-90 transition-all"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+
+            {imagePreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 md:grid-cols-4 gap-2">
+                {imagePreviews.map((src, idx) => (
+                  <div key={idx} className="relative group">
+                    <img src={src} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageAt(idx)}
+                      className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
             
@@ -161,27 +199,19 @@ export default function CreatePost({
                   </svg>
                   <span className="text-sm font-medium">Photo</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageSelect}
                     className="hidden"
                   />
                 </label>
-                
-                <button
-                  type="button"
-                  className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 12l2 2 4-4" />
-                  </svg>
-                  <span className="text-sm font-medium">Feeling</span>
-                </button>
               </div>
               
               <button
                 type="submit"
-                disabled={!content.trim() && !selectedImage || isSubmitting}
+                disabled={(!content.trim() && selectedImages.length === 0) || isSubmitting}
                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Posting...' : 'Post'}

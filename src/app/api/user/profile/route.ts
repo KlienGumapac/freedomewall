@@ -34,7 +34,6 @@ export async function PUT(request: NextRequest) {
 
     const { bio, education, location, relationship } = await request.json();
 
-    // Update user profile information
     const updateData: any = {};
     if (bio !== undefined) updateData.bio = bio;
     if (education !== undefined) updateData.education = education;

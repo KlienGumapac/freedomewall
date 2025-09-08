@@ -12,7 +12,6 @@ export async function PUT(request: NextRequest) {
   try {
     await connectDB();
 
-    // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(

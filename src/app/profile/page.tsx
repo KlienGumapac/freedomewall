@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
@@ -31,11 +31,22 @@ interface Post {
   _id: string;
   content: string;
   image?: string;
+  images?: string[]; 
+  userId?: string;
   likes: number;
   comments: number;
   createdAt: string;
   isPinned?: boolean;
 }
+
+const reactionEmoji: Record<'like'|'love'|'haha'|'wow'|'sad'|'angry', string> = {
+  like: '👍',
+  love: '❤️',
+  haha: '😂',
+  wow: '😮',
+  sad: '😢',
+  angry: '😡',
+};
 
 function formatJoinDate(input?: string): string | undefined {
   if (!input) return undefined;
@@ -79,6 +90,23 @@ export default function ProfilePage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const [showProfileInfoModal, setShowProfileInfoModal] = useState(false);
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [reactionPickerPostId, setReactionPickerPostId] = useState<string | null>(null);
+  const [userReactions, setUserReactions] = useState<Record<string, 'like'|'love'|'haha'|'wow'|'sad'|'angry'>>({});
+  const reactionCloseTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openReactionPicker = (postId: string) => {
+    if (reactionCloseTimeout.current) {
+      clearTimeout(reactionCloseTimeout.current);
+      reactionCloseTimeout.current = null;
+    }
+    setReactionPickerPostId(postId);
+  };
+
+  const scheduleCloseReactionPicker = () => {
+    if (reactionCloseTimeout.current) clearTimeout(reactionCloseTimeout.current);
+    reactionCloseTimeout.current = setTimeout(() => setReactionPickerPostId(null), 200);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -91,7 +119,6 @@ export default function ProfilePage() {
 
     const load = async () => {
       try {
-     
         const res = await fetch('/api/user/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -102,38 +129,45 @@ export default function ProfilePage() {
           setUser(fetched);
           localStorage.setItem('user', JSON.stringify(fetched));
         } else {
-    
           const parsedUser: User = JSON.parse(userData);
           parsedUser.joinDate = formatJoinDate(parsedUser.joinDate) || parsedUser.joinDate;
           setUser(parsedUser);
         }
 
-        setPosts([
-          {
-            _id: '1',
-            content: 'Just finished building this amazing social media platform! ',
-            image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500',
-            likes: 24,
-            comments: 8,
-            createdAt: '2024-01-15T10:30:00Z',
-            isPinned: true,
-          },
-          {
-            _id: '2',
-            content: 'Beautiful sunset from my hometown! ',
-            image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500',
-            likes: 15,
-            comments: 3,
-            createdAt: '2024-01-14T18:45:00Z',
-          },
-          {
-            _id: '3',
-            content: 'Working on some exciting new features for Freedom Wall! ',
-            likes: 12,
-            comments: 5,
-            createdAt: '2024-01-13T14:20:00Z',
-          },
-        ]);
+        const userId = JSON.parse(localStorage.getItem('user') as string)?._id;
+        if (userId) {
+          const postsRes = await fetch(`/api/posts?userId=${encodeURIComponent(userId)}`);
+          if (postsRes.ok) {
+            const postsData = await postsRes.json();
+            const items = (postsData.posts || []) as any[];
+            const mapped: Post[] = items.map(p => ({
+              _id: p._id,
+              content: p.content,
+              images: p.images,
+              userId: typeof p.user === 'object' ? p.user._id : p.user,
+              likes: (p.reactions || []).length,
+              comments: (p.comments || []).length,
+              createdAt: p.createdAt,
+            }));
+            setPosts(mapped);
+
+            try {
+              const viewerId = JSON.parse(localStorage.getItem('user') as string)?._id;
+              if (viewerId) {
+                const initialReactions: Record<string, 'like'|'love'|'haha'|'wow'|'sad'|'angry'> = {} as any;
+                items.forEach(p => {
+                  const mine = (p.reactions || []).find((r: any) => String(r.user) === String(viewerId));
+                  if (mine && mine.type) initialReactions[p._id] = mine.type;
+                });
+                setUserReactions(initialReactions);
+              }
+            } catch {}
+          } else {
+            setPosts([]);
+          }
+        } else {
+          setPosts([]);
+        }
       } catch (error) {
         console.error('Error loading user:', error);
         router.push('/login');
@@ -253,21 +287,87 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePostSubmit = (content: string, image?: File) => {
-  
-    const newPost = {
-      _id: Date.now().toString(),
-      content,
-      image: image ? URL.createObjectURL(image) : undefined,
-      likes: 0,
-      comments: 0,
-      createdAt: new Date().toISOString(),
-      isPinned: false
-    };
-    
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-    
-    console.log('Creating post:', content, image);
+  const handlePostSubmit = async (content: string, images?: File[]) => {
+    try {
+      const token = localStorage.getItem('token');
+      const toBase64 = async (file: File): Promise<string> => {
+        return await compressImageToBase64(file, { maxWidth: 1600, quality: 0.8, mimeType: 'image/webp' });
+      };
+      const imagePayload: string[] = images && images.length
+        ? await Promise.all(images.map(f => toBase64(f)))
+        : [];
+
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content, images: imagePayload }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        console.error('Create post failed', res.status, text);
+        alert('Failed to create post. Please try again.');
+        return;
+      }
+      const data = await res.json();
+      const created = data.post as any;
+      const newPost: Post = {
+        _id: created._id,
+        content: created.content,
+        images: created.images,
+        likes: 0,
+        comments: 0,
+        createdAt: created.createdAt,
+      };
+      setPosts(prev => [newPost, ...prev]);
+    } catch (e) {
+      console.error('Create post error:', e);
+      alert('Failed to create post.');
+    }
+  };
+
+  const handleToggleLike = async (postId: string, type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' = 'like') => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/posts/${postId}/reactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setUserReactions(prev => ({ ...prev, [postId]: type }));
+      setPosts(prev => prev.map(p => p._id === postId ? { ...p, likes: data.likes } : p));
+    } catch (e) {
+      console.error('Like error', e);
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/posts/${postId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) return;
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+      setPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: p.comments + 1 } : p));
+    } catch (e) {
+      console.error('Comment error', e);
+    }
   };
 
 
@@ -547,7 +647,22 @@ export default function ProfilePage() {
                         
                         <p className="text-gray-800 mb-3">{post.content}</p>
                         
-                        {post.image && (
+                        {Array.isArray(post.images) && post.images.length > 0 ? (
+                          <div className="mb-3">
+                            <div className={`grid gap-2 ${post.images.length <= 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                              {post.images.slice(0, 6).map((src, idx) => (
+                                <div key={idx} className="relative rounded-lg overflow-hidden">
+                                  <img src={src} alt={`Post image ${idx + 1}`} className="w-full h-40 object-cover" />
+                                  {idx === 5 && post.images && post.images.length > 6 && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                      <span className="text-white font-semibold">+{(post.images.length - 5)}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : post.image ? (
                           <div className="mb-3 rounded-lg overflow-hidden">
                             <Image
                               src={post.image}
@@ -557,16 +672,74 @@ export default function ProfilePage() {
                               className="w-full h-64 object-cover"
                             />
                           </div>
-                        )}
+                        ) : null}
                         
                         <div className="flex items-center justify-between text-sm text-gray-500">
                           <div className="flex items-center space-x-4">
-                            <span>{post.likes} likes</span>
-                            <span>{post.comments} comments</span>
+                            <div
+                              className="relative"
+                              onMouseEnter={() => openReactionPicker(post._id)}
+                              onMouseLeave={scheduleCloseReactionPicker}
+                            >
+                              <button
+                                onClick={() => handleToggleLike(post._id, userReactions[post._id] || 'like')}
+                                className="hover:text-green-600 font-medium flex items-center space-x-1"
+                              >
+                                <span>{reactionEmoji[userReactions[post._id] || 'like']}</span>
+                                <span>Like</span>
+                                <span className="ml-1 text-gray-400">{post.likes}</span>
+                              </button>
+                              {reactionPickerPostId === post._id && (
+                                <div
+                                  className="absolute -top-14 left-0 bg-white border border-gray-200 rounded-full shadow-lg px-2 py-1 flex space-x-1 z-10"
+                                  onMouseEnter={() => openReactionPicker(post._id)}
+                                  onMouseLeave={scheduleCloseReactionPicker}
+                                >
+                                  {(['like','love','haha','wow','sad','angry'] as const).map((rt, i) => (
+                                    <button
+                                      key={rt}
+                                      onClick={() => handleToggleLike(post._id, rt)}
+                                      className={`text-xl transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-125 ${userReactions[post._id]===rt ? 'drop-shadow' : ''}`}
+                                      style={{ transitionDelay: `${i * 20}ms` }}
+                                      title={rt}
+                                    >
+                                      {reactionEmoji[rt]}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <span>{post.comments} Comments</span>
                           </div>
                           <button className="text-green-600 hover:text-green-700 font-medium">
                             Share
                           </button>
+                        </div>
+
+                        <div className="mt-3 flex items-start space-x-2">
+                          <div className="w-8 h-8 bg-green-100 rounded-full overflow-hidden flex items-center justify-center">
+                            {user.avatar ? (
+                              <Image src={user.avatar} alt="Me" width={32} height={32} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-green-600 text-xs font-semibold">{user.firstName.charAt(0)}{user.lastName.charAt(0)}</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <input
+                              value={commentInputs[post._id] || ''}
+                              onChange={(e) => setCommentInputs(prev => ({ ...prev, [post._id]: e.target.value }))}
+                              placeholder="Write a comment..."
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-500"
+                            />
+                            <div className="mt-2 text-right">
+                              <button
+                                onClick={() => handleAddComment(post._id)}
+                                className="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
+                              >
+                                Comment
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}

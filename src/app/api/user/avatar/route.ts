@@ -41,7 +41,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update user avatar
     const updatedUser = await User.findByIdAndUpdate(
       decoded.userId,
       { avatar },
