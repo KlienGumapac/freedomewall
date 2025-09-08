@@ -3,7 +3,10 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is missing. Set it in .env.local');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,6 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check password
     const isPasswordValid = await user.comparePassword(password);
     
     if (!isPasswordValid) {
@@ -36,16 +40,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       { 
         userId: user._id,
         email: user.email,
         username: user.username
       },
-      JWT_SECRET,
+      JWT_SECRET as string,
       { expiresIn: '7d' }
     );
 
+    // Return user data and token
     const userResponse = user.toJSON();
 
     return NextResponse.json({

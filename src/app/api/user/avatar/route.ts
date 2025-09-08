@@ -3,7 +3,10 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is missing. Set it in .env.local');
+}
 
 export async function PUT(request: NextRequest) {
   try {
@@ -21,7 +24,7 @@ export async function PUT(request: NextRequest) {
     let decoded: any;
     
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
+      decoded = jwt.verify(token, JWT_SECRET as string);
     } catch (error) {
       return NextResponse.json(
         { error: 'Invalid token' },
@@ -38,6 +41,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Update user avatar
     const updatedUser = await User.findByIdAndUpdate(
       decoded.userId,
       { avatar },
